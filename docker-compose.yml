@@ -1,0 +1,36 @@
+name: "keycloak-poc"
+
+services:
+  keycloak:
+    build:
+      context: ./keycloak/
+    ports:
+      - '8080:8080'
+      - '9000:9000'
+    depends_on:
+      - postgres
+      - infinispan
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_CACHE=ispn
+      - KC_CACHE_REMOTE_HOST=keycloak-poc-infinispan-1
+
+  infinispan:
+    build:
+      context: ./infinispan/
+    ports:
+      - '11222:11222'
+
+  postgres:
+    image: 'bitnami/postgresql:latest'
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=password
+      - POSTGRESQL_DATABASE=postgres
+
+networks:
+  default:
+    driver: bridge
