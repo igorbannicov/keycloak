@@ -1,0 +1,98 @@
+<infinispan
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="urn:infinispan:config:15.0 https://infinispan.org/schemas/infinispan-config-15.0.xsd
+                            urn:infinispan:server:15.0 https://infinispan.org/schemas/infinispan-server-15.0.xsd"
+      xmlns="urn:infinispan:config:15.0"
+      xmlns:server="urn:infinispan:server:15.0">
+
+    <cache-container name="keycloak">
+        <transport lock-timeout="60000"/>
+        <local-cache name="realms" simple-cache="true">
+            <encoding>
+                <key media-type="application/x-java-object"/>
+                <value media-type="application/x-java-object"/>
+            </encoding>
+            <memory max-count="10000"/>
+        </local-cache>
+        <local-cache name="users" simple-cache="true">
+            <encoding>
+                <key media-type="application/x-java-object"/>
+                <value media-type="application/x-java-object"/>
+            </encoding>
+            <memory max-count="10000"/>
+        </local-cache>
+        <distributed-cache name="sessions" owners="2">
+            <expiration lifespan="-1"/>
+        </distributed-cache>
+        <distributed-cache name="authenticationSessions" owners="2">
+            <expiration lifespan="-1"/>
+        </distributed-cache>
+        <distributed-cache name="offlineSessions" owners="2">
+            <expiration lifespan="-1"/>
+        </distributed-cache>
+        <distributed-cache name="clientSessions" owners="2">
+            <expiration lifespan="-1"/>
+        </distributed-cache>
+        <distributed-cache name="offlineClientSessions" owners="2">
+            <expiration lifespan="-1"/>
+        </distributed-cache>
+        <distributed-cache name="loginFailures" owners="2">
+            <expiration lifespan="-1"/>
+        </distributed-cache>
+        <local-cache name="authorization" simple-cache="true">
+            <encoding>
+                <key media-type="application/x-java-object"/>
+                <value media-type="application/x-java-object"/>
+            </encoding>
+            <memory max-count="10000"/>
+        </local-cache>
+        <replicated-cache name="work">
+            <expiration lifespan="-1"/>
+        </replicated-cache>
+        <local-cache name="keys" simple-cache="true">
+            <encoding>
+                <key media-type="application/x-java-object"/>
+                <value media-type="application/x-java-object"/>
+            </encoding>
+            <expiration max-idle="3600000"/>
+            <memory max-count="1000"/>
+        </local-cache>
+        <distributed-cache name="actionTokens" owners="2">
+            <encoding>
+                <key media-type="application/x-java-object"/>
+                <value media-type="application/x-java-object"/>
+            </encoding>
+            <expiration max-idle="-1" lifespan="-1" interval="300000"/>
+            <memory max-count="-1"/>
+        </distributed-cache>
+    </cache-container>
+
+   <server xmlns="urn:infinispan:server:15.0">
+      <interfaces>
+         <interface name="public">
+            <inet-address value="${infinispan.bind.address:0.0.0.0}"/>
+         </interface>
+      </interfaces>
+
+      <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+         <socket-binding name="keycloak" port="${infinispan.bind.port:11222}"/>
+      </socket-bindings>
+
+      <security>
+         <security-realms>
+            <security-realm name="keycloak">
+               <!-- Uncomment to enable TLS on the realm -->
+               <server-identities>
+                  <ssl>
+                     <keystore path="/opt/certs/keyStore.p12" keystore-password="password"/>
+                     <truststore path="/opt/certs/keyStore.p12" password="password"/>
+                  </ssl>
+               </server-identities>
+               <properties-realm/>
+            </security-realm>
+         </security-realms>
+      </security>
+
+      <endpoints socket-binding="keycloak" security-realm="keycloak" />
+   </server>
+</infinispan>

@@ -9,6 +9,7 @@ USER 0
 RUN curl -L https://downloads.jboss.org/infinispan/$VERSION/infinispan-server-$VERSION.zip > infinispan.zip && \
     microdnf install -y unzip && \
     mkdir /opt/infinispan && \
+    mkdir /opt/certs && \
     unzip infinispan.zip -d /opt/infinispan && \
     rm -rf infinispan.zip && \
     mv /opt/infinispan/infinispan-server-$VERSION/* /opt/infinispan && \
@@ -18,8 +19,14 @@ RUN curl -L https://downloads.jboss.org/infinispan/$VERSION/infinispan-server-$V
     chown -R 1001:1001 /opt
 
 USER 1001
-COPY infinispan.xml /opt/infinispan/server/conf/infinispan.xml
 
-ENTRYPOINT [ "/opt/infinispan/bin/server.sh"]
+ENV USER=admin
+ENV PASS=password
 
-EXPOSE 8080
+COPY conf/infinispan.xml /opt/infinispan/server/conf/infinispan.xml
+COPY certs/keyStore.p12 /opt/certs/keyStore.p12
+COPY conf/infinispan-token-realm.yaml /user-config/infinispan-token-realm.yaml
+
+ENTRYPOINT [ "/opt/infinispan/bin/server.sh", "-c", "/user-config/infinispan-token-realm.yaml"]
+
+EXPOSE 11222

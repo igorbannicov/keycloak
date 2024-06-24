@@ -10,11 +10,6 @@ services:
     depends_on:
       - postgres
       - infinispan
-    environment:
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
-      - KC_CACHE=ispn
-      - KC_CACHE_REMOTE_HOST=keycloak-poc-infinispan-1
 
   infinispan:
     build:
@@ -23,14 +18,9 @@ services:
       - '11222:11222'
 
   postgres:
-    image: 'bitnami/postgresql:latest'
+    build:
+      context: ./postgres/
     ports:
       - '5432:5432'
-    environment:
-      - POSTGRESQL_USERNAME=postgres
-      - POSTGRESQL_PASSWORD=password
-      - POSTGRESQL_DATABASE=postgres
-
-networks:
-  default:
-    driver: bridge
+    healthcheck:
+      test: psql postgres --command "select 1" -U postgres      
